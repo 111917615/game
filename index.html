@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sabrye's Homecoming Quest</title>
+<title>Homecoming Quest</title>
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#1a0f2e;--card:#2b1850;--ink:#fff4e6;--gold:#ffcf5c;--pink:#ff7fa8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -36,7 +36,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 </style>
 </head>
 <body>
-<h1>SABRYE'S HOMECOMING QUEST</h1>
+<h1>HOMECOMING QUEST</h1>
 <div id="wrap">
   <canvas id="c" width="640" height="360" aria-label="Platformer game"></canvas>
   <div id="ov"><div class="card" id="card"></div></div>
@@ -51,8 +51,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 <script>
 /* ===== EDIT THESE ===== */
 const HER = "Sabrye";
-const FROM = "";        // your name, e.g. "Alex" (shown at the end)
-const DETAILS = "Save the date: 6/15!";     // e.g. "Dance is Oct 24. I'll pick you up at 6!"
+const FROM = "Pierre";        // your name, e.g. "Alex" (shown at the end)
+const DETAILS = "ouuu shi the 16th?";     // e.g. "Dance is Oct 24. I'll pick you up at 6!"
 /* ====================== */
 
 const C=document.getElementById('c'),g=C.getContext('2d'),H=360;let W=640;
@@ -226,7 +226,7 @@ function showTitle(){
 function showAsk(){
  setTimeout(()=>{
   ov.classList.remove('hide');
-  card.innerHTML='<h2>'+HER+', will you go to homecoming with me?</h2><p>You solved every puzzle. One last question.</p><div id="btns"><button id="yes">Yes!</button><button id="no">No</button></div>';
+  card.innerHTML='<h2>'+HER+', will you go to homecoming with me?</h2><p>p-p-please</p><div id="btns"><button id="yes">Yes!</button><button id="no">No</button></div>';
   const no=document.getElementById('no'),labels=['No','Are you sure?','Try again','Nice try','Nope, wrong button'];let n=0;
   const dodge=e=>{e.preventDefault();n++;no.textContent=labels[n%labels.length];
    no.style.transform='translate('+((Math.random()-.5)*220)+'px,'+((Math.random()-.5)*90)+'px)'};
@@ -236,7 +236,7 @@ function showAsk(){
 }
 function win(){
  state='win';
- card.innerHTML='<h2>It\'s a date!</h2><p>'+HER+' said yes. Homecoming just got a whole lot better.'+(DETAILS?'<br><br>'+DETAILS:'')+(FROM?'<br><br>&mdash; '+FROM:'')+'</p><button id="again">Play again</button>';
+ card.innerHTML='<h2>It\'s a date!</h2><p>'+HER+' said yes. ts so peak :3.'+(DETAILS?'<br><br>'+DETAILS:'')+(FROM?'<br><br>&mdash; '+FROM:'')+'</p><button id="again">Play again</button>';
  document.getElementById('again').onclick=()=>{parts=[];state='title';showTitle()};
  const cols=['#ffcf5c','#ff7fa8','#8be9fd','#7CFF9B','#fff4e6'];
  const burst=()=>{for(let i=0;i<70;i++)parts.push({x:Math.random()*W,y:-10,vx:(Math.random()-.5)*2,vy:Math.random()*2,c:cols[i%5]})};
