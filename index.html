@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sabrye's Homecoming Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1a0f2e;--card:#2b1850;--ink:#fff4e6;--gold:#ffcf5c;--pink:#ff7fa8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:#000;color:var(--ink);font-family:'Silkscreen','Courier New',monospace;height:100vh;height:100dvh;overflow:hidden}
+h1{display:none}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+canvas{display:block;background:#000;image-rendering:pixelated;touch-action:none}
+#ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px}
+#ov.hide{display:none}
+.card{background:rgba(43,24,80,.94);border:3px solid var(--gold);border-radius:8px;padding:18px 20px;max-width:440px;width:100%;text-align:center;line-height:1.5}
+.card h2{margin:0 0 8px;font-size:clamp(15px,3.4vw,22px);color:var(--gold)}
+.card p{margin:6px 0 12px;font-size:clamp(10px,2.3vw,13px)}
+button{font-family:inherit;font-size:13px;font-weight:700;background:var(--pink);color:#2b0f2b;border:0;border-bottom:4px solid #b84a74;border-radius:6px;padding:10px 18px;cursor:pointer}
+button:active{transform:translateY(2px)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#btns{display:flex;gap:10px;justify-content:center;align-items:center;min-height:50px;position:relative}
+#no{position:relative;background:#6a5a8c;border-bottom-color:#43376a;color:#fff;transition:transform .15s}
+#touch{display:none;position:fixed;left:10px;right:10px;bottom:60px;justify-content:space-between;opacity:.75;pointer-events:none}#touch button{pointer-events:auto}
+#touch button{width:76px;height:64px;font-size:22px}
+@media (pointer:coarse){#touch{display:flex}}
+.tip{font-size:10px;opacity:.7;margin:8px 0 0;text-align:center}
+#hintbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;align-items:center;padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(26,15,46,.78)}#hintbar button{padding:6px 12px;font-size:11px}
+#ht{font-size:11px;line-height:1.5;flex:1;color:var(--gold)}
+.card b{font-size:22px;letter-spacing:3px;color:var(--gold);display:block;margin:10px 0}
+#pd{font-size:24px;letter-spacing:4px;background:#12091f;border:2px solid var(--pink);border-radius:4px;padding:8px;margin:6px 0 4px;min-height:44px;color:#7CFF9B;overflow:hidden}
+#kg{display:grid;gap:6px;margin:8px 0}#kg.n{grid-template-columns:repeat(5,1fr)}#kg.w{grid-template-columns:repeat(9,1fr)}
+.k{padding:8px 0;font-size:12px}.row{display:flex;gap:8px;justify-content:center}
+</style>
+</head>
+<body>
+<h1>SABRYE'S HOMECOMING QUEST</h1>
+<div id="wrap">
+  <canvas id="c" width="640" height="360" aria-label="Platformer game"></canvas>
+  <div id="ov"><div class="card" id="card"></div></div>
+</div>
+<div id="touch">
+  <div><button id="bl" aria-label="Left">&#9664;</button> <button id="br" aria-label="Right">&#9654;</button></div>
+  <button id="bj" aria-label="Jump">&#9650;</button>
+</div>
+<div id="hintbar"><button id="hb">Need a hint?</button><button id="fs">Fullscreen</button><div id="ht" aria-live="polite"></div></div>
+
+
+<script>
+/* ===== EDIT THESE ===== */
+const HER = "Sabrye";
+const FROM = "";        // your name, e.g. "Alex" (shown at the end)
+const DETAILS = "Save the date: 6/15!";     // e.g. "Dance is Oct 24. I'll pick you up at 6!"
+/* ====================== */
+
+const C=document.getElementById('c'),g=C.getContext('2d'),H=360;let W=640;
+const ov=document.getElementById('ov'),card=document.getElementById('card');
+const ORDER=HER.toUpperCase().split('');
+
+const atb=s=>s.replace(/[A-Z]/g,c=>String.fromCharCode(155-c.charCodeAt(0)));
+const NUMS={ZERO:0,ONE:1,TWO:2,THREE:3,FOUR:4,FIVE:5,SIX:6,SEVEN:7,EIGHT:8,NINE:9};
+const CODE1='DANCE',WORDS2='SIX ONE FIVE',CODE2=WORDS2.split(' ').map(w=>NUMS[w]).join('');
+const LV=[
+ {name:'LEVEL 1: HEART HUNT',intro:'Three hearts are hiding.',type:'h',w:1400,start:[40,280],gx:1230,goal:1330,
+  hints:['Not every heart sits on the ground.','Jump up onto the floating platforms.'],
+  plat:[[0,320,420,40],[500,320,300,40],[880,320,520,40],[200,250,80,14],[560,240,90,14],[700,180,80,14],[1000,240,100,14]],
+  items:[{t:'h',x:230,y:215},{t:'h',x:590,y:205},{t:'h',x:730,y:145}]},
+ {name:'LEVEL 2: RIGHT OF WAY',intro:'These switches follow a rule of the road.',type:'s',w:1400,start:[40,280],gx:1230,goal:1330,
+  hints:['What do the colors on a street corner tell you to do?','Stop. Slow down. Go.','Red, then yellow, then green.'],
+  plat:[[0,320,500,40],[580,320,340,40],[1000,320,400,40],[260,250,80,14],[640,240,90,14],[780,180,70,14]],
+  items:[{t:'s',n:2,c:'#ffd84f',x:210,y:300},{t:'s',n:3,c:'#4fe36b',x:670,y:220},{t:'s',n:1,c:'#ff4f4f',x:1080,y:300}]},
+ {name:'LEVEL 3: LOCKER NOTE',intro:'A note and a keypad are hiding here.',type:'k',mode:'word',code:CODE1,w:1400,start:[40,280],gx:1230,goal:1330,
+  hints:['Find the note first. The keypad is further along.','The note looks like gibberish because the alphabet is flipped.','A becomes Z, B becomes Y, C becomes X...','The word is something you are going to together.'],
+  plat:[[0,320,1400,40],[200,250,80,14],[340,190,90,14],[600,250,80,14]],
+  items:[{t:'n',x:380,y:165,text:'Found taped inside a locker:<b>'+atb(CODE1)+'</b>Mirror, mirror, on the wall. The keypad wants a word.'},{t:'p',x:1100,y:300}]},
+ {name:'LEVEL 4: A NAME',intro:'Spell the name of the one you came for.',type:'l',w:1500,start:[40,280],gx:1330,goal:1430,
+  hints:['The letters belong to her name.','Watch the top right corner to see your progress.','Wrong letters do not hurt. Just try another.'],
+  plat:[[0,320,350,40],[440,320,200,40],[720,320,200,40],[1000,320,500,40],[150,240,80,14],[330,200,70,14],[520,230,80,14],[640,170,80,14],[820,230,80,14],[960,170,70,14],[1100,240,80,14]],
+  items:[]},
+ {name:'LEVEL 5: BLEACHER CODE',intro:'Another note. Another keypad.',type:'k',mode:'num',code:CODE2,w:1400,start:[40,280],gx:1230,goal:1330,
+  hints:['Climb up to find the note.','Same trick as before: the alphabet in a mirror.','The decoded words are number names.','Type their digits on the keypad.'],
+  plat:[[0,320,1400,40],[150,260,80,14],[290,200,80,14],[430,140,90,14],[1000,240,110,14]],
+  items:[{t:'n',x:470,y:115,text:'Found under the bleachers:<b>'+atb(WORDS2)+'</b>The keypad only takes numbers.'},{t:'p',x:1050,y:215}]},
+ {name:'LEVEL 6: SKY CLIMB',intro:'Five hearts. The last stretch.',type:'h',w:1500,start:[40,280],gx:1380,goal:1450,
+  hints:['The platforms go up, then back down.','Each heart sits above a platform.'],
+  plat:[[0,320,250,40],[300,270,70,14],[430,220,70,14],[560,170,70,14],[690,130,70,14],[830,190,70,14],[950,240,70,14],[1070,290,70,14],[1250,320,250,40]],
+  items:[{t:'h',x:465,y:185},{t:'h',x:595,y:135},{t:'h',x:725,y:95},{t:'h',x:865,y:155},{t:'h',x:985,y:205}]},
+ {name:'FINAL LEVEL',intro:'Someone is waiting for you...',type:'f',w:1400,start:[40,280],gx:0,goal:0,hints:[],
+  plat:[[0,320,1400,40],[300,250,90,14]],items:[]}
+];
+(function(){
+ const spots=[[180,205],[350,165],[550,195],[670,135],[850,195],[1130,205],[390,285],[780,285],[1060,285],[1200,285]];
+ LV.find(l=>l.type==='l').items=ORDER.map((ch,i)=>({t:'l',ch,x:spots[i%spots.length][0],y:spots[i%spots.length][1]}));
+})();
+
+let li=0,lvl,P,cam=0,solved=false,got=0,next=0,toast='',tt=0,state='title',keys={},acc=0,last=0,shake=0,parts=[];
+
+function say(m,t=150){toast=m;tt=t}
+function load(i){
+ li=i;lvl=JSON.parse(JSON.stringify(LV[i]));
+ P={x:lvl.start[0],y:lvl.start[1],vx:0,vy:0,w:18,h:26,on:false,f:1};
+ got=0;next=0;solved=lvl.type==='f';cam=0;hi=0;hideHint();lvl.nh=lvl.items.filter(i=>i.t==='h').length;
+ say(lvl.intro,220);
+}
+function solids(){const s=lvl.plat.slice();if(!solved&&lvl.gx)s.push([lvl.gx,140,14,180]);return s}
+function hit(a,b){return a.x<b[0]+b[2]&&a.x+a.w>b[0]&&a.y<b[1]+b[3]&&a.y+a.h>b[1]}
+
+function step(){
+ const L=keys.l||keys.a,R=keys.r||keys.d,J=keys.j;
+ const sp=2.8;
+ P.vx=(R?sp:0)-(L?sp:0);if(P.vx)P.f=P.vx>0?1:-1;
+ if(J&&P.on){P.vy=-9.6;P.on=false}
+ P.vy=Math.min(P.vy+.5,12);
+ const S=solids();
+ P.x+=P.vx;
+ for(const r of S)if(hit(P,r)){if(P.vx>0)P.x=r[0]-P.w;else if(P.vx<0)P.x=r[0]+r[2]}
+ P.x=Math.max(0,Math.min(lvl.w-P.w,P.x));
+ P.y+=P.vy;P.on=false;
+ for(const r of S)if(hit(P,r)){if(P.vy>0){P.y=r[1]-P.h;P.on=true}else if(P.vy<0)P.y=r[1]+r[3];P.vy=0}
+ if(P.y>H+80){P.x=lvl.start[0];P.y=lvl.start[1];P.vy=0;say('Oops! Back to the start.',100)}
+ // items
+ for(const it of lvl.items){
+  if(it.done)continue;
+  if(it.cool>0){it.cool--;continue}
+  const inb=hit(P,[it.x-10,it.y-10,20,20]);
+  if(it.t==='n'||it.t==='p'){
+   if(!inb){it.armed=1;continue}
+   if(it.armed!==0){it.armed=0;it.t==='n'?openNote(it):openPad()}
+   continue}
+  if(!inb)continue;
+  if(it.t==='h'){it.done=1;got++;say('Heart '+got+' of '+lvl.nh+'!',80)}
+  else if(it.t==='s'){
+   if(it.n===next+1){it.done=1;next++;say('Click!',80)}
+   else{lvl.items.forEach(o=>{if(o.t==='s')o.done=0});next=0;it.cool=90;shake=12;say('Wrong order. The switches reset.',120)}
+  }else if(it.t==='l'){
+   if(it===lvl.items[next]){it.done=1;next++;say('"'+it.ch+'" collected!',60)}
+   else{it.cool=90;say('Not that one yet.',90)}
+  }
+ }
+ if(!solved&&((lvl.type==='h'&&got>=lvl.nh)||(lvl.type==='s'&&next>=3)||(lvl.type==='l'&&next>=ORDER.length)||(lvl.type==='k'&&lvl.open))){solved=true;shake=10;say('Unlocked! Head right.',160)}
+ if(lvl.type!=='f'&&solved&&P.x>lvl.goal-10){
+  if(li<2)say('Level cleared!',80);
+  load(li+1);
+ }
+ if(lvl.type==='f'&&P.x>560&&state==='play'){state='ask';showAsk()}
+ cam=Math.max(0,Math.min(lvl.w-W,P.x-W/2));
+ if(tt>0)tt--;if(shake>0)shake--;
+}
+
+/* ===== drawing ===== */
+const stars=Array.from({length:60},(_,i)=>[(i*97)%640,(i*53)%200,(i%3)+1]);
+function rect(c,x,y,w,h){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),w,h)}
+function draw(t){
+ const sg=g.createLinearGradient(0,0,0,H);sg.addColorStop(0,'#1a0f2e');sg.addColorStop(.6,'#6b2a6a');sg.addColorStop(1,'#ff8a6b');
+ g.fillStyle=sg;g.fillRect(0,0,W,H);
+ g.save();
+ if(shake>0)g.translate((Math.random()-.5)*5,(Math.random()-.5)*5);
+ for(const s of stars){g.globalAlpha=.4+.6*Math.abs(Math.sin(t/700+s[0]));rect('#fff',((s[0]*W/640-cam*.1)%W+W)%W,s[1],s[2],s[2])}
+ g.globalAlpha=1;
+ // hills
+ g.fillStyle='#3a1b5c';g.beginPath();g.moveTo(0,H);
+ for(let x=0;x<=W;x+=20)g.lineTo(x,250+Math.sin((x+cam*.3)/90)*22);
+ g.lineTo(W,H);g.fill();
+ g.translate(-Math.round(cam),0);
+ // string lights above ground
+ for(let x=0;x<lvl.w;x+=60){const c=['#ffcf5c','#ff7fa8','#8be9fd'][(x/60)%3|0];rect(c,x+8,24+Math.sin(x/60)*4,6,6)}
+ for(const r of lvl.plat){rect('#3a2466',r[0],r[1],r[2],r[3]);rect('#ff8fb1',r[0],r[1],r[2],4);rect('#2b1850',r[0],r[1]+r[3]-3,r[2],3)}
+ // gate
+ if(!solved&&lvl.gx){
+  for(let y=140;y<320;y+=10){rect(Math.floor(y/10)%2?'#ffcf5c':'#ff7fa8',lvl.gx,y,14,8)}
+  g.fillStyle='#fff';g.font='14px monospace';g.fillText('\u{1F512}',lvl.gx-2,230);
+ }
+ // goal door
+ if(lvl.goal){rect(solved?'#ffcf5c':'#6a5a8c',lvl.goal-6,262,34,58);rect('#2b1850',lvl.goal,268,22,52);if(solved)rect('#fff4e6',lvl.goal+4,270,14,48)}
+ // items
+ lvl.items.forEach((it,i)=>{
+  const bob=Math.sin(t/260+i)*3;
+  if(it.t==='h'&&!it.done)heart(it.x,it.y+bob,'#ff4f7b');
+  if(it.t==='s'){rect('#2b1850',it.x-12,it.y+14,24,6);rect(it.c,it.x-9,it.y+(it.done?10:4),18,10);if(it.done)rect('#fff',it.x-9,it.y+10,18,2)}
+  if(it.t==='n'){const o=it.y+bob;rect('#fff4e6',it.x-8,o-8,16,18);rect('#c9b79c',it.x-5,o-4,10,2);rect('#c9b79c',it.x-5,o+1,10,2);rect('#c9b79c',it.x-5,o+6,6,2)}
+  if(it.t==='p'){rect('#43376a',it.x-12,it.y-18,24,38);rect(lvl.open?'#7CFF9B':'#111',it.x-8,it.y-14,16,8);for(let r=0;r<3;r++)for(let c=0;c<3;c++)rect('#ffcf5c',it.x-8+c*6,it.y-2+r*6,4,4)}
+  if(it.t==='l'){const act=it===lvl.items[next];
+   if(!it.done){g.fillStyle=act?'#ffcf5c':'#ff7fa8';g.beginPath();g.arc(it.x,it.y+bob,12,0,7);g.fill();
+    g.fillStyle='#2b0f2b';g.font='bold 15px monospace';g.fillText(it.ch,it.x-5,it.y+bob+5)}}
+ });
+ if(lvl.type==='f')sabrye(660,294,t);
+ player();
+ g.restore();
+ // HUD
+ rect('rgba(0,0,0,.4)',0,0,W,22);g.fillStyle='#ffcf5c';g.font='bold 11px "Silkscreen",monospace';g.fillText(lvl.name,8,15);
+ let prog=lvl.type==='k'?(lvl.open?'Keypad open':'Keypad locked'):lvl.type==='h'?'Hearts '+got+'/'+lvl.nh:lvl.type==='s'?'Switches '+next+'/3':lvl.type==='l'?ORDER.map((c,i)=>i<next?c:'_').join(' '):'';
+ g.textAlign='right';g.fillText(prog,W-8,15);g.textAlign='left';
+ if(tt>0){g.globalAlpha=Math.min(1,tt/20);g.font='bold 12px "Silkscreen",monospace';const w=g.measureText(toast).width+20;
+  rect('rgba(26,15,46,.85)',W/2-w/2,H-44,w,28);g.fillStyle='#fff4e6';g.textAlign='center';g.fillText(toast,W/2,H-25);g.textAlign='left';g.globalAlpha=1}
+ // confetti
+ for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=.06;g.fillStyle=p.c;g.fillRect(p.x,p.y,5,5)}
+ parts=parts.filter(p=>p.y<H+10);
+}
+function heart(x,y,c){g.fillStyle=c;const p=[[-6,-6],[2,-6],[-8,-2],[-2,-2],[0,-2],[6,-2],[-6,2],[-2,2],[2,2],[-4,6],[0,6],[-2,8]];
+ rect(c,x-10,y-6,8,8);rect(c,x+2,y-6,8,8);rect(c,x-10,y-2,20,8);rect(c,x-6,y+6,12,4);rect(c,x-2,y+10,4,3)}
+function player(){
+ const x=Math.round(P.x),y=Math.round(P.y);
+ rect('#2b1850',x+2,y+16,6,10);rect('#2b1850',x+10,y+16,6,10);
+ rect('#8be9fd',x,y+8,18,12);rect('#fff4e6',x+7,y+8,4,5);
+ rect('#f2c9a0',x+3,y,12,9);rect('#3b2412',x+2,y-2,14,4);
+ rect('#222',x+(P.f>0?10:5),y+3,2,2);
+}
+function sabrye(x,y,t){
+ const b=Math.sin(t/300)*2;
+ rect('#f2c9a0',x+2,y+8+b,12,6);rect('#ff7fa8',x-2,y+18+b,20,18);rect('#ff7fa8',x,y+14+b,16,6);
+ rect('#f2c9a0',x+3,y+2+b,10,10);rect('#4a2a14',x,y-2+b,16,6);rect('#4a2a14',x-1,y+4+b,3,16);rect('#4a2a14',x+14,y+4+b,3,16);
+ rect('#222',x+5,y+6+b,2,2);rect('#222',x+10,y+6+b,2,2);
+ rect('#ffcf5c',x+2,y-6+b,12,3);rect('#ffcf5c',x+2,y-9+b,3,3);rect('#ffcf5c',x+7,y-9+b,3,3);rect('#ffcf5c',x+12,y-9+b,3,3);
+ heart(x+8,y-26+b,'#ff4f7b');
+ g.fillStyle='#ffcf5c';g.font='bold 11px "Silkscreen",monospace';g.textAlign='center';g.fillText(HER,x+8,y-40+b);g.textAlign='left';
+}
+
+/* ===== overlays ===== */
+function showTitle(){
+ ov.classList.remove('hide');
+ card.innerHTML='<h2>'+HER+'\'s Homecoming Quest</h2><p>A few puzzles stand between you and a very important question. Think you can solve them?<br>Move: arrows or A/D. Jump: Space or W.</p><button id="go">Start the quest</button>';
+ document.getElementById('go').onclick=()=>{ov.classList.add('hide');state='play';load(0);last=performance.now()};
+}
+function showAsk(){
+ setTimeout(()=>{
+  ov.classList.remove('hide');
+  card.innerHTML='<h2>'+HER+', will you go to homecoming with me?</h2><p>You solved every puzzle. One last question.</p><div id="btns"><button id="yes">Yes!</button><button id="no">No</button></div>';
+  const no=document.getElementById('no'),labels=['No','Are you sure?','Try again','Nice try','Nope, wrong button'];let n=0;
+  const dodge=e=>{e.preventDefault();n++;no.textContent=labels[n%labels.length];
+   no.style.transform='translate('+((Math.random()-.5)*220)+'px,'+((Math.random()-.5)*90)+'px)'};
+  no.addEventListener('pointerenter',dodge);no.addEventListener('pointerdown',dodge);no.addEventListener('click',dodge);
+  document.getElementById('yes').onclick=win;
+ },500);
+}
+function win(){
+ state='win';
+ card.innerHTML='<h2>It\'s a date!</h2><p>'+HER+' said yes. Homecoming just got a whole lot better.'+(DETAILS?'<br><br>'+DETAILS:'')+(FROM?'<br><br>&mdash; '+FROM:'')+'</p><button id="again">Play again</button>';
+ document.getElementById('again').onclick=()=>{parts=[];state='title';showTitle()};
+ const cols=['#ffcf5c','#ff7fa8','#8be9fd','#7CFF9B','#fff4e6'];
+ const burst=()=>{for(let i=0;i<70;i++)parts.push({x:Math.random()*W,y:-10,vx:(Math.random()-.5)*2,vy:Math.random()*2,c:cols[i%5]})};
+ burst();let k=0;const iv=setInterval(()=>{burst();if(++k>6)clearInterval(iv)},500);
+}
+
+/* ===== notes, keypad, hints ===== */
+const ht=document.getElementById('ht');let hi=0,buf='';
+function modal(html){state='modal';ov.classList.remove('hide');card.innerHTML=html}
+function closeModal(){ov.classList.add('hide');state='play';keys={}}
+function openNote(it){modal('<h2>A crumpled note</h2><p>'+it.text+'</p><button id="cl">Put it away</button>');document.getElementById('cl').onclick=closeModal}
+function openPad(){buf='';padUI()}
+function padUI(msg){
+ const word=lvl.mode==='word',ks=(word?'ABCDEFGHIJKLMNOPQRSTUVWXYZ':'1234567890').split('');
+ modal('<h2>Keypad</h2><div id="pd">'+(buf||'&nbsp;')+'</div><p>'+(msg||(word?'Type the code word.':'Type the code digits.'))+'</p><div id="kg" class="'+(word?'w':'n')+'">'+ks.map(k=>'<button class="k">'+k+'</button>').join('')+'</div><div class="row"><button id="kd">Del</button><button id="ke">Enter</button><button id="kx">Close</button></div>');
+ document.querySelectorAll('.k').forEach(b=>b.onclick=()=>{if(buf.length<12){buf+=b.textContent;padUI()}});
+ document.getElementById('kd').onclick=()=>{buf=buf.slice(0,-1);padUI()};
+ document.getElementById('ke').onclick=submitPad;
+ document.getElementById('kx').onclick=closeModal;
+}
+function submitPad(){
+ if(buf===lvl.code){lvl.open=true;lvl.items.forEach(i=>{if(i.t==='p')i.done=1});closeModal();say('Click! The lock opens.',160)}
+ else{buf='';padUI('ACCESS DENIED. Try again.')}
+}
+addEventListener('keydown',e=>{
+ if((e.key==='h'||e.key==='H')&&state==='play')showHint();
+ if(state!=='modal'||!document.getElementById('pd'))return;
+ const k=e.key.toUpperCase();
+ if(k==='BACKSPACE'){buf=buf.slice(0,-1);padUI()}
+ else if(k==='ENTER'){e.preventDefault();submitPad()}
+ else if(k.length===1&&(lvl.mode==='word'?/[A-Z]/:/[0-9]/).test(k)&&buf.length<12){buf+=k;padUI()}
+});
+function showHint(){const h=lvl.hints||[];if(!h.length){ht.textContent='No hint needed. Just walk up to her.';return}
+ const n=Math.min(hi++,h.length-1);ht.textContent='Hint '+(n+1)+' of '+h.length+': '+h[n]}
+function hideHint(){ht.textContent=''}
+document.getElementById('hb').onclick=function(){showHint();this.blur()};
+document.getElementById('fs').onclick=function(){const d=document.documentElement;this.blur();if(document.fullscreenElement)document.exitFullscreen();else if(d.requestFullscreen)d.requestFullscreen()};
+function fit(){const a=innerWidth/innerHeight;W=Math.round(Math.max(480,Math.min(1000,H*a)));C.width=W;C.height=H;
+ C.style.width='100%';C.style.height=a>=1.33?'100%':'auto'}
+addEventListener('resize',fit);
+
+/* ===== input ===== */
+const map={ArrowLeft:'l',a:'a',A:'a',ArrowRight:'r',d:'d',D:'d',ArrowUp:'j',w:'j',W:'j',' ':'j'};
+addEventListener('keydown',e=>{const k=map[e.key];if(k){keys[k]=1;if(state==='play')e.preventDefault()}});
+addEventListener('keyup',e=>{const k=map[e.key];if(k)keys[k]=0});
+function hold(id,k){const b=document.getElementById(id);
+ const on=e=>{e.preventDefault();keys[k]=1},off=e=>{e.preventDefault();keys[k]=0};
+ b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)}
+hold('bl','l');hold('br','r');hold('bj','j');
+
+/* ===== loop ===== */
+fit();load(0);
+function loop(now){
+ if(state==='play'||state==='ask'||state==='win'){
+  acc+=Math.min(now-last,100);last=now;
+  while(acc>=16.67){if(state==='play')step();acc-=16.67}
+ }
+ draw(now);requestAnimationFrame(loop);
+}
+showTitle();last=performance.now();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
