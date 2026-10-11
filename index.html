@@ -288,7 +288,7 @@ function dash(a){
  const S=cv(a),g=S.g;let y=0,vy=0,obs=[],gap=60,off=0,go=false;
  const jump=()=>{go=true;if(y===0)vy=11.5};
  a.on(S.c,'pointerdown',jump);a.on(window,'keydown',e=>{if(e.key===' '||e.key==='ArrowUp'||e.key==='w'){e.preventDefault();jump()}});
- const E=['🧦','🍌','🦆','🧱'];
+ const E=['🧦','🍌','🦆','🧱', '🍪'];
  a.loop(t=>{
   const W=S.W,H=S.H,GY=H-60,px=W*.18,m=Math.floor(off/40),spd=4.6+Math.min(m,70)*.04;
   if(go){off+=spd;vy-=.62;y+=vy;if(y<=0){y=0;vy=0}gap-=spd;obs.forEach(o=>o.x-=spd);
